@@ -58,6 +58,9 @@ yarn-error.log
 
 
 /storage/framework/sessions/
+/storage/logs/
+/public/*.zip
+
 
 # Backups & archives
 /vendor_old
