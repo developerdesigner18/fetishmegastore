@@ -1,0 +1,10 @@
+User-agent: *
+Disallow: /index.php/
+Disallow: /index.php/index.php/
+Disallow: /private/
+Disallow: /temp/
+Disallow: /admin/
+Allow: /public/
+
+# Sitemap
+Sitemap: https://fetishmegastore.com/sitemap.xml

@@ -1,0 +1,12 @@
+# Custom directives go here
+#<IfModule pagespeed_module>
+#    ModPagespeed off
+#</IfModule>
+
+# cPanel-generated PHP handler block
+#<IfModule mime_module>
+#  AddHandler application/x-httpd-ea-php83 .php .php8 .phtml
+#</IfModule>
+# php -- END cPanel-generated handler, do not edit
+
+# More custom directives can be added here

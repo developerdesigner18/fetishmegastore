@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <!-- Home Page -->
+    <url>
+        <loc>https://fetishmegastore.com/</loc>
+        <priority>1.00</priority>
+    </url>
+
+    <!-- Blog Routes -->
+    <url>
+        <loc>https://fetishmegastore.com/blog</loc>
+        <priority>0.80</priority>
+    </url>
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/blog/{slug}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+
+    <!-- Channel Routes -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/channel/{user}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/channel/live-stream/{user}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/channel/{user}/followers</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/channel/{user}/subscribers</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/channel/{user}/videos</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+
+    <!-- Category Routes -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/category/{id}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/category/{id}/videos</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+    <url>
+        <loc>https://fetishmegastore.com/browse-categories</loc>
+        <priority>0.80</priority>
+    </url>
+
+    <!-- Tag Routes -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/tag/{id}</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/tag-videos/{id}</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+    <url>
+        <loc>https://fetishmegastore.com/browse-tags</loc>
+        <priority>0.80</priority>
+    </url>
+    
+
+    <!-- Streamer Verification -->
+    <url>
+        <loc>https://fetishmegastore.com/streamer/verify</loc>
+        <priority>0.70</priority>
+    </url>
+    <url>
+        <loc>https://fetishmegastore.com/streamer/pending-verification</loc>
+        <priority>0.70</priority>
+    </url>
+
+
+    <!-- Membership -->
+    <url>
+        <loc>https://fetishmegastore.com/membership/channel/set-membership-tiers</loc>
+        <priority>0.70</priority>
+    </url>
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/membership/channel/edit-tier/{tier}</loc>-->
+<!--        <priority>0.60</priority>-->
+<!--    </url>-->
+
+    <!-- Tokens -->
+    <url>
+        <loc>https://fetishmegastore.com/get-tokens</loc>
+        <priority>0.70</priority>
+    </url>
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/tokens/select-gateway/{tokenPack}</loc>-->
+<!--        <priority>0.60</priority>-->
+<!--    </url>-->
+
+    <!-- Payments -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/paypal/purchase/{tokenPack}</loc>-->
+<!--        <priority>0.60</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/stripe/purchase/{tokenPack}</loc>-->
+<!--        <priority>0.60</priority>-->
+<!--    </url>-->
+
+
+    <!-- Videos -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/browse-videos/{videocategory?}{slug?}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/video/{video}-{slug}</loc>-->
+<!--        <priority>0.80</priority>-->
+<!--    </url>-->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/single-video/{id}</loc>-->
+<!--        <priority>0.70</priority>-->
+<!--    </url>-->
+
+    <!-- Account Settings -->
+    <url>
+        <loc>https://fetishmegastore.com/profile</loc>
+        <priority>0.60</priority>
+    </url>
+    <url>
+        <loc>https://fetishmegastore.com/dashboard</loc>
+        <priority>0.60</priority>
+    </url>
+
+    <!-- Contact -->
+    <url>
+        <loc>https://fetishmegastore.com/get-in-touch</loc>
+        <priority>0.50</priority>
+    </url>
+
+    <!-- Notifications -->
+    <url>
+        <loc>https://fetishmegastore.com/notifications</loc>
+        <priority>0.50</priority>
+    </url>
+
+    <!-- Pages -->
+<!--    <url>-->
+<!--        <loc>https://fetishmegastore.com/p/{page}</loc>-->
+<!--        <priority>0.50</priority>-->
+<!--    </url>-->
+</urlset>

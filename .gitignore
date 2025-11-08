@@ -1,0 +1,66 @@
+# Laravel specific
+/vendor
+/node_modules
+/storage/*.key
+/.phpunit.cache
+/.env
+.env
+.env.backup
+.env.production
+
+# IDE & system
+/.idea
+/.vscode
+/.fleet
+/.yarn
+
+# Logs & debug files
+npm-debug.log
+yarn-error.log
+
+# Public folder exceptions
+/public/ads
+/public/audio
+/public/blogs
+/public/bt-p-proofs
+/public/build
+/public/build_06oct
+/public/build_070ct
+/public/build_080ct
+/public/build_09oct
+/public/build_15oct
+/public/buildold
+/public/categories
+/public/cgi-bin
+/public/chunks
+/public/cms-uploads
+/public/coverPics
+/public/downloads
+/public/ebook
+/public/ebooks
+/public/error_log
+/public/fonts
+/public/gallery
+/public/images
+/public/livestreams
+/public/models
+/public/profilePics
+/public/promo-banners
+/public/promo-videos
+/public/short-videos
+/public/sounds
+/public/storage
+/public/stories
+/public/streamer-vdocs
+/public/thumbnails
+/public/upgrader
+/public/videos
+
+
+/storage/framework/sessions/
+
+# Backups & archives
+/vendor_old
+/vendor.zip
+/live_upload_bkp_04_09_2025.zip
+/output.mp4
