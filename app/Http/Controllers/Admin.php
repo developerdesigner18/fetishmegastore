@@ -1084,7 +1084,7 @@ class Admin extends Controller
         $c->seo_desc = $r->seo_desc ?? null;
         $c->seo_keyword = $r->seo_keyword ?? null;
         $c->seo_h2 = $r->seo_h2 ?? null;
-        $c->seo = $r->input('seo');
+        $c->seo = $r->input('seo') ? json_encode($r->input('seo')) : null;
 
         $c->save();
 

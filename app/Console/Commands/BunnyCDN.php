@@ -103,8 +103,12 @@ class BunnyCDN extends Command
         });
 
 
-        $checkOnBunnyCategories = collect($this->client->listFiles($bunnyFolderName))->map(function ($file) {
+       /* $checkOnBunnyCategories = collect($this->client->listFiles($bunnyFolderName))->map(function ($file) {
             return $file->ObjectName;
+        });*/
+
+        $checkOnBunnyCategories = collect($this->client->listFiles($bunnyFolderName))->map(function ($file) {
+            return is_array($file) ? ($file['ObjectName'] ?? null) : ($file->ObjectName ?? null);
         });
 
 

@@ -7,6 +7,9 @@
             selector: '.textarea',
             plugins: 'image code link lists',
             images_upload_url: '/admin/cms/upload-image',
+            relative_urls: false,
+            remove_script_host: false,
+            convert_urls: true,
             toolbar: 'code | formatselect fontsizeselect | insertfile a11ycheck | numlist bullist | bold italic | forecolor backcolor | template codesample | alignleft aligncenter alignright alignjustify | bullist numlist | link image tinydrive',
             promotion: false
         });

@@ -109,7 +109,7 @@ class ChannelController extends Controller
         $streamUser = User::whereUsername($user)
             ->withCount(['followers', 'subscribers', 'videos'])
             ->first();
-
+        
             // dd($streamUser);
 
         if(!$streamUser){
@@ -162,7 +162,7 @@ class ChannelController extends Controller
 
 
         $totalVideos = $streamUser->videos()->count();
-
+        
 //        //        dd($streamUser->videos()->get());
 //        $channleVideoCategoryIds = $streamUser->videos()->get()->map(function ($videoDetails) {
 //            return $videoDetails->category_id;
@@ -335,91 +335,111 @@ class ChannelController extends Controller
 //    }
 
 //AJ FUNCTION
-    public function channelVideos(Request $request, User $user)
-    {
-        //        $user->videos()->where('price', '>=', 0)->with('streamer')->inRandomOrder()->paginate(40)
+ public function channelVideos(Request $request, User $user)
+{
+    $sort = $request->sort ?? 'Latest';
 
-        $shortVideo = ShortVideo::with(['streamer'])->where('user_id', $user->id)
-            ->where('type', 'short-video')
-            ->where(function ($q) {
-                $q->where('price', 0)->orWhereNull('price');
-            })
-            ->inRandomOrder()
-            ->paginate(12);
+    // SHORT VIDEOS
+    $shortVideo = ShortVideo::with(['streamer'])
+        ->where('user_id', $user->id)
+        ->where('type', 'short-video')
+        ->where(function ($q) {
+            $q->where('price', 0)->orWhereNull('price');
+        });
 
+    // FREE VIDEOS
+    $freeVideos = Video::with(['streamer'])
+        ->where('user_id', $user->id)
+        ->where(function ($q) {
+            $q->where('price', 0)->orWhereNull('price');
+        });
 
-        $freeVideos = Video::where('user_id', $user->id)->where(function ($q) {
-            $q->where('price', 0)
-                ->orWhereNull('price');
-        })
-            ->with(['streamer']);
+    // PAID VIDEOS
+    $paidVideos = Video::with(['streamer'])
+        ->where('user_id', $user->id)
+        ->where('price', '>', 0);
 
+    // SORT CASES
+    switch ($sort) {
+        case 'Most':
+            $freeVideos->orderByDesc('views');
+            $paidVideos->orderByDesc('views');
+            $shortVideo->orderByDesc('views');
+            break;
 
-        $paidVideos = Video::where('user_id', $user->id)->where('price', '>', 0)
-            ->with(['streamer']);
+        case 'Recently':
+            $freeVideos->orderByDesc('id');
+            $paidVideos->orderByDesc('id');
+            $shortVideo->orderByDesc('id');
+            break;
 
+        case 'Older':
+            $freeVideos->orderBy('created_at');
+            $paidVideos->orderBy('created_at');
+            $shortVideo->orderBy('created_at');
+            break;
 
+        case 'Highest':
+            $freeVideos->orderByDesc('price');
+            $paidVideos->orderByDesc('price');
+            break;
 
+        case 'Lowest':
+            $freeVideos->orderBy('price');
+            $paidVideos->orderBy('price');
+            break;
 
-        $sort = $request->sort ?? 'Latest';
-        switch ($sort) {
-            case 'Most':
-                $freeVideos->orderByDesc('views');
-                $paidVideos->orderByDesc('views');
-                break;
-            case 'Recently':
-                $freeVideos->orderByDesc('id');
-                $paidVideos->orderByDesc('id');
-                break;
-            case 'Older':
-                $freeVideos->orderBy('created_at');
-                $paidVideos->orderBy('created_at');
-                break;
-            case 'Highest':
-                $freeVideos->orderByDesc('price');
-                $paidVideos->orderByDesc('price');
-                break;
-            case 'Lowest':
-                $freeVideos->orderBy('price');
-                $paidVideos->orderBy('price');
-                break;
-            case 'Only Free':
-                $paidVideos->where('price', 0);
-                break;
-            case 'Latest':
-            default:
-                $freeVideos->orderByDesc('id');
-                $paidVideos->orderByDesc('id');
-                break;
-        }
+        case 'Only Free':
+            $paidVideos = Video::whereRaw('1 = 0'); // Empty query
+            break;
 
-
-        $freeVideos = $freeVideos ->inRandomOrder()
-            ->take(6)
-            ->get();
-
-        $paidVideos = $paidVideos->inRandomOrder()
-            ->paginate(6);
-
-        // Merge paginated items properly
-        $mergedResults = $freeVideos->merge($paidVideos->items())->merge($shortVideo->items())->shuffle();
-
-        // Create custom pagination
-        $paginatedResults = new \Illuminate\Pagination\LengthAwarePaginator(
-            $mergedResults->forPage(1, 6), // Get first 6 items for the page
-            count($mergedResults), // Total merged count
-            6, // Items per page
-            request()->get('page', 1), // Get current page from request
-            ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
-        );
-
-        $videos = $paginatedResults->toArray();
-        //        $videos = $mergedResults;
-
-        $data = $videos;
-
-        return $data;
+        case 'Latest':
+        default:
+            $freeVideos->orderByDesc('id');
+            $paidVideos->orderByDesc('id');
+            $shortVideo->orderByDesc('id');
+            break;
     }
+
+    // FETCH DATA
+    $freeVideos = $freeVideos->get();
+    $paidVideos = $paidVideos->get();
+    $shortVideos = $shortVideo->get();
+
+    // MERGE ALL VIDEOS
+    $merged = collect()
+        ->merge($freeVideos)
+        ->merge($paidVideos)
+        ->merge($shortVideos);
+
+    // APPLY RANDOM IF REQUESTED
+    if ($sort === "Random") {
+        $merged = $merged->shuffle();
+    }
+
+    // PAGINATION
+    $currentPage = $request->get('page', 1);
+    $perPage = 9; // Changed to 9 to match frontend condition
+
+    $paginated = new \Illuminate\Pagination\LengthAwarePaginator(
+        $merged->forPage($currentPage, $perPage),
+        $merged->count(),
+        $perPage,
+        $currentPage,
+        ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+    );
+
+    // RETURN IN CORRECT FORMAT FOR FRONTEND
+    return response()->json([
+        'data' => array_values($paginated->items()),
+        'total' => $paginated->total(),
+        'current_page' => $paginated->currentPage(),
+        'last_page' => $paginated->lastPage(),
+        'per_page' => $paginated->perPage(),
+    ]);
+}
+
+
 
 
     // audio

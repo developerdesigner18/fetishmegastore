@@ -63,20 +63,29 @@ class Video extends Model
             get: function ($value) {
                 // If value is empty, return null or a default image
                 if (empty($value)) {
-                    return null; // or return a default image URL
+                    return null;
+                }
+
+                // If it's already a full URL, return as is
+                if (Str::startsWith($value, ['http://', 'https://'])) {
+                    return $value;
                 }
 
                 // Check if file exists in local storage
-                $localPath = public_path(basename(asset($value)));
+                $localPath = public_path($value);
                 if (File::exists($localPath)) {
                     return asset($value);
                 }
+
+
 
                 // If not found locally, return the CDN URL
                 return env('BUNNY_CDN') . $value;
             }
         );
     }
+
+
 
     protected function getVideoNameAttribute()
     {
@@ -215,24 +224,66 @@ class Video extends Model
 
     protected function getvideoGIFAttribute()
     {
-        $videoName = explode('.', explode('/', $this->video)[1] ?? explode('/', $this->video)[0])[0] . '.gif';
-        //prd($videoName);
-//        $checkFIleExist = File::exists(public_path('videos/GIF/'.$videoName));
-//
-//        if($checkFIleExist){
-//            return asset('videos/GIF/'.$videoName);
-//        }else{
-//            return null;
-//        }
-//        dd(file_get_contents(env('BUNNY_CDN').'videos/GIF/'.$videoName));
-        if (file_exists(public_path("videos/GIF/$videoName"))) {
-            return asset("videos/GIF/$videoName");
-        } else {
-            return env('BUNNY_CDN') . 'videos/GIF/' . $videoName;
+        // If video path is empty, return null
+        if (empty($this->video)) {
+            return null;
         }
 
-
+        // Get the original video path
+        $videoPath = $this->video;
+        
+        // Remove query parameters if present (signed URLs)
+        if (str_contains($videoPath, '?')) {
+            $videoPath = strtok($videoPath, '?');
+        }
+        
+        // Extract base filename and change extension to .gif
+        $videoName = basename($videoPath);
+        $gifName = pathinfo($videoName, PATHINFO_FILENAME) . '.gif';
+        
+        // First check if GIF exists locally
+        $localGifPath = public_path('videos/GIF/' . $gifName);
+        if (File::exists($localGifPath)) {
+            return asset('videos/GIF/' . $gifName);
+        }
+        
+        // Fallback to Bunny CDN
+        $bunnyGifUrl = env('BUNNY_CDN') . 'videos/GIF/' . $gifName;
+        
+        // Optional: Check if file exists on Bunny CDN (you might want to remove this in production)
+        // as it can be slow. For now, we'll return the URL and let frontend handle missing files.
+        
+        return $bunnyGifUrl;
     }
+
+
+
+//   protected function getVideoGIFAttribute()
+// {
+//     if ($this->is_gif != 1) {
+//         return null;
+//     }
+
+//     if (empty($this->video)) {
+//         return null;
+//     }
+
+//     $rawVideo = $this->getRawOriginal('video');
+
+//     if (str_contains($rawVideo, '?')) {
+//         $rawVideo = strtok($rawVideo, '?');
+//     }
+
+//     $bunnyPrefix = rtrim(env('BUNNY_CDN'), '/');
+//     if (str_starts_with($rawVideo, $bunnyPrefix)) {
+//         $rawVideo = str_replace($bunnyPrefix, '', $rawVideo);
+//     }
+
+//     $filename = pathinfo($rawVideo, PATHINFO_FILENAME);
+//     return rtrim(env('BUNNY_CDN'), '/') . '/videos/GIF/' . $filename . '.gif';
+// }
+
+
 
     protected function getStr360Attribute()
     {

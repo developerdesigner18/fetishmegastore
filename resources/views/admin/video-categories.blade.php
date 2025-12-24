@@ -9,7 +9,7 @@
           enctype="multipart/form-data" class="space-y-6">
         {{ csrf_field() }}
 
-            @if (!empty($catname))
+        @if (!empty($catname))
             <input type="hidden" name="catID" value="{{ $catID }}">
         @endif
 

@@ -44,6 +44,7 @@ use App\Http\Controllers\VideosController;
 use App\Http\Controllers\EbookController;
 use App\Http\Controllers\AffiliateController;
 use App\Http\Controllers\TextFileController;
+use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\ProductsManagementController;
 use App\Http\Middleware\BanMiddleware;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -102,6 +103,8 @@ Route::get('check-locale', function () {
     // dd(count($availableCategories));
     dd(App::currentLocale(), config('app.locales'));
 });
+
+Route::get('/img-resize/{width}/{path}', [App\Http\Controllers\ImageController::class, 'resize'])->where('path', '.*');
 
 // Admin login
 Route::any('admin/login', [Admin::class, 'login'])->name('admin.login');
@@ -481,5 +484,8 @@ Route::group(
         Route::get('/my-videos', [VideosController::class, 'myVideos'])->name('videos.ordered');
     }
 );
+Route::get('/data/gif', [CustomerController::class, 'createGif']);
+Route::get('/move-data-bunny', [CustomerController::class, 'moveDataToBunny']);
+Route::get('/data/gif/manual', [CustomerController::class, 'createGifManual']);
 // Auth Routes (login/register/etc.)
 require __DIR__ . '/auth.php';

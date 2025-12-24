@@ -904,7 +904,7 @@ class VideosController extends Controller
         // fetch videos
 
         $videos = $videos->paginate(28)->appends($request->query())->toArray();
-
+        
         // the image
         $exploreImage = asset('images/browse-videos-icon.png');
 
@@ -1213,154 +1213,168 @@ class VideosController extends Controller
     //     ]);
     // }
 
-    public function browseVideos(VideoCategories $videocategory = null, string $slug = null)
-    {
-        $request = request();
-        $sort = $request->get('sort', 'Recently');
-        $perPage = 30; // Ek page par kitne items dikhane hain
-        $preFetchLimit = 100;
+ public function browseVideos(VideoCategories $videocategory = null, string $slug = null)
+{
+    $request = request();
+    $sort = $request->get('sort', 'Recently');
+    $perPage = 30; 
+    $preFetchLimit = 100;
 
-        // --- Watch History ka logic (same rahega) ---
-        $watchVideos = collect();
-        if (auth()->check()) {
-            $slugs = session('unauth_viewed_videos', []);
-            if (!empty($slugs)) {
-                // Get videos from both tables
-                $videos = Video::whereIn('slug', $slugs)->get();
-                $shortVideos = ShortVideo::whereIn('slug', $slugs)->get();
-                $watchVideos = $videos->merge($shortVideos);
-                foreach ($watchVideos as $watchVideo) {
-                    $videoId = $watchVideo->id;
-                    $videoType = $watchVideo instanceof ShortVideo ? 'short-video' : 'video';
+    // --- Watch History Logic (same) ---
+    $watchVideos = collect();
+    if (auth()->check()) {
+        $slugs = session('unauth_viewed_videos', []);
+        if (!empty($slugs)) {
+            $videos = Video::whereIn('slug', $slugs)->get();
+            $shortVideos = ShortVideo::whereIn('slug', $slugs)->get();
+            $watchVideos = $videos->merge($shortVideos);
 
-                    $alreadyExists = ContentWatchHistory::where('user_id', auth()->id())
-                        ->where('video_id', $videoId)
-                        ->where('type', $videoType)
-                        ->first();
+            foreach ($watchVideos as $watchVideo) {
+                $videoId = $watchVideo->id;
+                $videoType = $watchVideo instanceof ShortVideo ? 'short-video' : 'video';
 
-                    if (!$alreadyExists) {
-                        ContentWatchHistory::create([
-                            'user_id' => auth()->id(),
-                            'IP' => request()->ip() ?? '',
-                            'type' => $videoType,
-                            'video_id' => $videoId,
-                            'date' => Carbon::today()->format('Y-m-d'),
-                        ]);
-                    }
+                $exists = ContentWatchHistory::where('user_id', auth()->id())
+                    ->where('video_id', $videoId)
+                    ->where('type', $videoType)
+                    ->first();
+
+                if (!$exists) {
+                    ContentWatchHistory::create([
+                        'user_id' => auth()->id(),
+                        'IP' => request()->ip() ?? '',
+                        'type' => $videoType,
+                        'video_id' => $videoId,
+                        'date' => Carbon::today()->format('Y-m-d'),
+                    ]);
                 }
-                session()->forget('unauth_viewed_videos');
             }
+            session()->forget('unauth_viewed_videos');
         }
-
-        // --- FILTER AUR SORT FUNCTIONS ---
-        $applyFilters = function ($query) use ($request, $videocategory) {
-            if ($videocategory) {
-                $query->where('category_id', 'LIKE', "%{$videocategory->id}%");
-            }
-            if ($request->filled('search')) {
-                $query->where('title', 'LIKE', '%' . $request->search . '%');
-            }
-            if ($request->filled('selectedCategories')) {
-                 $query->where(function ($q) use ($request) {
-                    foreach ($request->selectedCategories as $catId) {
-                       $q->orWhere('category_id', 'LIKE', "%{$catId}%");
-                    }
-                });
-            }
-            if ($request->filled('selectedTags')) {
-                $query->where(function ($q) use ($request) {
-                    foreach ($request->selectedTags as $tag) {
-                       $q->orWhere('tags', 'LIKE', "%{$tag}%");
-                    }
-                });
-            }
-            if ($request->filled('selectedModels')) {
-                 $query->where(function ($q) use ($request) {
-                    foreach ($request->selectedModels as $model) {
-                       $q->orWhere('model_id', 'LIKE', "%{$model}%");
-                    }
-                });
-            }
-            return $query;
-        };
-
-        $applySort = function ($query, $sort) {
-             return match ($sort) {
-                'Most' => $query->orderByDesc('views'),
-                'Recently' => $query->orderByDesc('id'),
-                'Older' => $query->orderBy('created_at'),
-                'Highest' => $query->orderByDesc('price'),
-                'Lowest' => $query->orderBy('price'),
-                'Only Free' => $query->where('price', 0)->orderByDesc('views'),
-                default => $query->orderByDesc('id'),
-            };
-        };
-
-        // 1. Videos fetch karein
-        $videosQuery = $applySort($applyFilters(Video::with('streamer')), $sort);
-        $videos = $videosQuery->limit($preFetchLimit)->get();
-
-        // 2. Short Videos fetch karein
-        $shortVideosQuery = $applySort($applyFilters(ShortVideo::with('streamer')->where('type', 'short-video')), $sort);
-        $shortVideos = $shortVideosQuery->limit($preFetchLimit)->get();
-
-        // 3. Sabhi ko merge karein aur type set karein
-        $allVideos = collect([])
-            ->merge($videos->each(fn($item) => $item->setAttribute('type', 'video')))
-            ->merge($shortVideos->each(fn($item) => $item->setAttribute('type', 'short-video')));
-
-        // 4. Shuffle karein
-        $shuffledVideos = $allVideos->shuffle();
-
-        // 5. Manually Paginator banayein
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
-        $currentPageItems = $shuffledVideos->slice(($currentPage - 1) * $perPage, $perPage)->values();
-        $paginatedVideos = new LengthAwarePaginator(
-            $currentPageItems,
-            $shuffledVideos->count(),
-            $perPage,
-            $currentPage,
-            ['path' => $request->url(), 'query' => $request->query()]
-        );
-
-        $hasFilter = $request->filled('search') || $request->filled('selectedCategories') || $request->filled('selectedTags') || $request->filled('selectedModels');
-//        $recommendedVideo = $hasFilter ? collect() : RecommendedVideo::pluck('video_id')->toArray();
-        $recommendedVideo =  collect() ;
-        $recommendedVideoId = RecommendedVideo::pluck('video_id')->toArray();
-        $recommendedVideo = Video::with(['streamer'])->whereIn('id', $recommendedVideoId)->paginate(16);
-        $featuredChannels = $hasFilter ? collect() : User::where('is_featured_verified', 1)->with('videos')->get();
-
-        // Props for frontend
-        $categories = VideoCategories::orderBy('category')->get();
-        $tags = Tag::orderBy('name')->get();
-        $models = Models::orderBy('name')->get();
-        $exploreImage = asset('images/browse-videos-icon.png');
-        $headTitle = $request->route()->getName() == 'home' ? 'FetishMegaStore' : 'Browse Videos';
-
-        return Inertia::render('Videos/BrowseVideos', [
-            'userLoginID' => auth()->id(),
-            'videos' => $paginatedVideos,
-            'featuredChannels' => $featuredChannels,
-            'recommendedVideo' => $recommendedVideo,
-            'category' => $videocategory,
-            'categories' => $categories,
-            'tags' => $tags,
-            'models' => $models,
-            'exploreImage' => $exploreImage,
-            'headTitle' => $headTitle,
-            'watchVideos' => $watchVideos,
-            'faqs' => Faq::where('status', 1)->orderBy('order_by', 'asc')->get(),
-            'blocks' => AdBlock::where('number', 0)->get(),
-            'userrequest' => [
-                'sort' => $request->get('sort', 'Recently'),
-                'search' => $request->get('search'),
-                'page' => $currentPage,
-                'selectedCategories' => $request->get('selectedCategories', []),
-                'selectedTags' => $request->get('selectedTags', []),
-                'selectedModels' => $request->get('selectedModels', []),
-            ],
-        ]);
     }
+
+    // Filters
+    $applyFilters = function ($query) use ($request, $videocategory) {
+        if ($videocategory) {
+            $query->where('category_id', 'LIKE', "%{$videocategory->id}%");
+        }
+        if ($request->filled('search')) {
+            $query->where('title', 'LIKE', '%' . $request->search . '%');
+        }
+        if ($request->filled('selectedCategories')) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->selectedCategories as $catId) {
+                    $q->orWhere('category_id', 'LIKE', "%{$catId}%");
+                }
+            });
+        }
+        if ($request->filled('selectedTags')) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->selectedTags as $tag) {
+                    $q->orWhere('tags', 'LIKE', "%{$tag}%");
+                }
+            });
+        }
+        if ($request->filled('selectedModels')) {
+            $query->where(function ($q) use ($request) {
+                foreach ($request->selectedModels as $model) {
+                    $q->orWhere('model_id', 'LIKE', "%{$model}%");
+                }
+            });
+        }
+        return $query;
+    };
+
+    // Sorting
+    $applySort = function ($query, $sort) {
+        return match ($sort) {
+            'Most' => $query->orderByDesc('views'),
+            'Recently' => $query->orderByDesc('id'),
+            'Older' => $query->orderBy('created_at'),
+            'Highest' => $query->orderByDesc('price'),
+            'Lowest' => $query->orderBy('price'),
+            'Only Free' => $query->where('price', 0)->orderByDesc('views'),
+            default => $query->orderByDesc('id'),
+        };
+    };
+
+    // Current page
+    $currentPage = LengthAwarePaginator::resolveCurrentPage();
+
+    // 🚨 IMPORTANT: Fetch full list (no limit here)
+    $videosFull = $applySort($applyFilters(Video::with('streamer')), $sort)->get();
+    $shortVideosFull = $applySort(
+        $applyFilters(ShortVideo::with('streamer')->where('type', 'short-video')),
+        $sort
+    )->get();
+
+    // Merge full list
+    $fullList = collect([])
+        ->merge($videosFull->each(fn($v) => $v->type = 'video'))
+        ->merge($shortVideosFull->each(fn($s) => $s->type = 'short-video'));
+
+    // 🚨 Pagination needs FULL LIST count
+    $total = $fullList->count();
+
+    // 🎯 FIRST PAGE: ONLY 4 RANDOM VIDEOS
+    if ($currentPage == 1) {
+        $displayList = $fullList->shuffle()->take(12)->values();
+    } else {
+        // Other pages: show normal 30 items per page
+        $displayList = $fullList
+            ->slice(($currentPage - 1) * $perPage, $perPage)
+            ->values();
+    }
+
+    // Create paginator
+    $paginatedVideos = new LengthAwarePaginator(
+        $displayList,
+        $total,  // TOTAL count for pagination
+        $perPage,
+        $currentPage,
+        ['path' => $request->url(), 'query' => $request->query()]
+    );
+
+    // Filter check
+    $hasFilter = $request->filled('search') ||
+        $request->filled('selectedCategories') ||
+        $request->filled('selectedTags') ||
+        $request->filled('selectedModels');
+
+    // Recommended Videos
+    $recommendedVideoId = RecommendedVideo::pluck('video_id')->toArray();
+    $recommendedVideo = Video::with(['streamer'])->whereIn('id', $recommendedVideoId)->paginate(16);
+
+    // Featured Channels
+    $featuredChannels = $hasFilter ? collect() :
+        User::where('is_featured_verified', 1)->with('videos')->get();
+
+    return Inertia::render('Videos/BrowseVideos', [
+        'userLoginID' => auth()->id(),
+        'videos' => $paginatedVideos,   // finally working pagination
+        'featuredChannels' => $featuredChannels,
+        'recommendedVideo' => $recommendedVideo,
+        'category' => $videocategory,
+        'categories' => VideoCategories::orderBy('category')->get(),
+        'tags' => Tag::orderBy('name')->get(),
+        'models' => Models::orderBy('name')->get(),
+        'exploreImage' => asset('images/browse-videos-icon.png'),
+        'headTitle' => $request->route()->getName() == 'home' ? 'FetishMegaStore' : 'Browse Videos',
+        'watchVideos' => $watchVideos,
+        'faqs' => Faq::where('status', 1)->orderBy('order_by', 'asc')->get(),
+        'blocks' => AdBlock::where('number', 0)->get(),
+        'userrequest' => [
+            'sort' => $sort,
+            'search' => $request->search,
+            'page' => $currentPage,
+            'selectedCategories' => $request->get('selectedCategories', []),
+            'selectedTags' => $request->get('selectedTags', []),
+            'selectedModels' => $request->get('selectedModels', []),
+        ],
+    ]);
+}
+
+
+
 
     public function filterVideos(Request $request)
     {
@@ -1994,6 +2008,7 @@ class VideosController extends Controller
                 //     'de' => $request['description_de'],
                 // ]),
             ]);
+             createGif($video->id);
             // dd($video);
             // Commit the transaction
             DB::commit();
@@ -2051,7 +2066,7 @@ class VideosController extends Controller
             $descriptionData[$request->description_lang] = $request->description_de;
         }
 
-        ShortVideo::create([
+       $shortVideo =  ShortVideo::create([
             'user_id' => Auth::user()->id,
             'title' => json_encode($titleData, JSON_UNESCAPED_UNICODE),
             'slug' => Str::slug($request->title_en_val),
@@ -2068,7 +2083,7 @@ class VideosController extends Controller
             'video_id' => $request->video_id ?? null,
             'views' => ShortVideo::RandomViews(),
         ]);
-
+         createGif($shortVideo->id);
         return to_route('preview.list')->with('message', __('Preview successfully uploaded'));
     }
 
@@ -2146,7 +2161,7 @@ class VideosController extends Controller
             'tags' => isset($request['tag']) ? implode(',', $request['tag']) : implode(',', $video->tags),
             //'description' => json_encode(['en' => $request->description_en, 'de' => $request->description_de]),
         ]);
-
+         createGif($video->id);
         return back()->with('message', __('Video successfully updated'));
     }
 

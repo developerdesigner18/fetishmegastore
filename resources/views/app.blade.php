@@ -1,9 +1,18 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" prefix="og: https://ogp.me/ns#">
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#7c3aed">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <!-- Resource Hints for Performance -->
+    <link rel="dns-prefetch" href="//www.googletagmanager.com">
+    <link rel="dns-prefetch" href="//cdn.jsdelivr.net">
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+
     <link rel="shortcut icon" type="image/png" href="{{ asset(opt('favicon', 'favicon.png')) }}" sizes="128x128"/>
     <meta name="robots" content="index, follow">
     <title inertia>
@@ -36,32 +45,36 @@
               content="{{ __(" :channelName channel (:handle)", ['channelName'=> $streamUser->name,'handle' => '@' . $streamUser->username]) }}"/>
         <meta property="og:url" content="{{ route('channel', ['user' => $streamUser->username]) }}"/>
         <meta property="og:image" content="{{ $streamUser->cover_picture }}"/>
+        <meta property="og:type" content="profile"/>
+        <meta name="twitter:card" content="summary_large_image"/>
+        <meta name="twitter:title" content="{{ __(" :channelName channel (:handle)", ['channelName'=> $streamUser->name,'handle' => '@' . $streamUser->username]) }}"/>
+        <meta name="twitter:image" content="{{ $streamUser->cover_picture }}"/>
     @endif
 
     @if(request()->route() && request()->route()->getName() == 'video.single.page')
 
-       @php
-    
+        @php
 
-    $videoModel = \App\Models\Video::whereSlug(request()->route('id'))->first();
 
-    $metaTitle = $videoModel->title;
-    if (\Illuminate\Support\Str::length($metaTitle) > 65) {
-        $metaTitle = Str::limit($metaTitle, 65, '');
-    }
+            $videoModel = \App\Models\Video::whereSlug(request()->route('id'))->first();
 
-    // Safely cast seoDetails to array
-    $seoDetails = json_decode(json_encode($videoModel->seoDetails), true);
+            $metaTitle = $videoModel->title;
+            if (\Illuminate\Support\Str::length($metaTitle) > 65) {
+                $metaTitle = Str::limit($metaTitle, 65, '');
+            }
 
-    $langSeo = $seoDetails[$appCurrentLocale] ?? $seoDetails;
-    $seokeyword = '';
+            // Safely cast seoDetails to array
+            $seoDetails = json_decode(json_encode($videoModel->seoDetails), true);
 
-    if (is_array($langSeo) && !empty($langSeo['keyword'])) {
-        $seokeyword = $langSeo['keyword'];
-    } else {
-        $seokeyword = $videoModel->categoryNames . ', ' . (!empty($videoModel->tags) ? implode(', ', $videoModel->tags) : '');
-    }
-@endphp
+            $langSeo = $seoDetails[$appCurrentLocale] ?? $seoDetails;
+            $seokeyword = '';
+
+            if (is_array($langSeo) && !empty($langSeo['keyword'])) {
+                $seokeyword = $langSeo['keyword'];
+            } else {
+                $seokeyword = $videoModel->categoryNames . ', ' . (!empty($videoModel->tags) ? implode(', ', $videoModel->tags) : '');
+            }
+        @endphp
 
 
         <meta name="title" content="{{ @$langSeo->h2 ?? @$metaTitle }}"/>
@@ -188,16 +201,55 @@
         <meta name="keywords" content="{{ get_page_keywords()  }}"/>
     @endif
 
-    <!-- Fonts -->
-    <link rel="stylesheet" type="text/css" href="{{ asset('fonts/nunito/fonts.css') }}"/>
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    {{-- LCP Image Preload --}}
+    @php
+        $lcpUrl = null;
+        $props = $page['props'] ?? [];
+        $getThumb = function($list) {
+             if (isset($list['data']) && is_array($list['data']) && count($list['data']) > 0) return $list['data'][0]['thumbnail'] ?? null;
+             if (is_array($list) && count($list) > 0 && isset($list[0]['thumbnail'])) return $list[0]['thumbnail'];
+             return null;
+        };
+
+        // Logic to match BrowseVideos.jsx: Random videos are shown only on first page with no filters
+        $isFirstPage = true;
+        if (isset($props['videos']['current_page']) && $props['videos']['current_page'] > 1) {
+            $isFirstPage = false;
+        }
+
+        $hasFilter = false;
+        $req = $props['userrequest'] ?? [];
+        if (!empty($req['search']) || !empty($req['selectedCategories']) || !empty($req['selectedTags']) || !empty($req['selectedModels'])) {
+            $hasFilter = true;
+        }
+
+        if ($isFirstPage && !$hasFilter && !empty($props['randomvideos'])) {
+            $lcpUrl = $getThumb($props['randomvideos']);
+        }
+
+        if (!$lcpUrl && !empty($props['recommendedVideo'])) {
+             $lcpUrl = $getThumb($props['recommendedVideo']);
+        }
+
+        if (!$lcpUrl && !empty($props['videos'])) {
+             $lcpUrl = $getThumb($props['videos']);
+        }
+    @endphp
+    @if($lcpUrl)
+        <link rel="preload" as="image" href="{{ $lcpUrl }}" fetchpriority="high" />
+    @endif
+
+    <!-- Fonts - Optimized with font-display swap -->
+    <link rel="preload" href="{{ asset('fonts/nunito/fonts.css') }}" as="style" onload="this.onload=null;this.rel='stylesheet'">
+    <noscript><link rel="stylesheet" type="text/css" href="{{ asset('fonts/nunito/fonts.css') }}"/></noscript>
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" media="print" onload="this.media='all'" />
 
     <script>
         window.PUSHER_KEY = '{{ env('PUSHER_APP_KEY') }}';
         window.PUSHER_CLUSTER = '{{ env('PUSHER_APP_CLUSTER') }}';
     </script>
 
-    <!-- Google tag (gtag.js) -->
+    <!-- Google tag (gtag.js) - Optimized Loading -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-1E0LGK5Q3D"></script>
     <script>
         window.dataLayer = window.dataLayer || [];
@@ -208,7 +260,14 @@
 
         gtag('js', new Date());
 
-        gtag('config', 'G-1E0LGK5Q3D');
+        gtag('config', 'G-1E0LGK5Q3D', {
+            'send_page_view': false
+        });
+
+        // Send pageview after page is interactive
+        window.addEventListener('load', function() {
+            gtag('event', 'page_view');
+        });
     </script>
 
     <script type="application/ld+json">
@@ -255,11 +314,13 @@
 
 </head>
 
-<body class="font-sans antialiased ">
+<body class="font-sans antialiased">
+<!-- Skip to main content link for accessibility -->
+<a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:top-0 focus:left-0 focus:z-50 focus:p-4 focus:bg-indigo-600 focus:text-white">Skip to main content</a>
 
 <h1 hidden="hidden">{{get_seo_h2_tag()}}</h1>
 <h2 hidden="hidden">{{get_seo_h2_tag()}}</h2>
-<div class="min-h-screen flex flex-col flex-auto flex-shrink-0">
+<div id="main-content" class="min-h-screen flex flex-col flex-auto flex-shrink-0" role="main">
 
     <x-Translations/>
     @inertia

@@ -31,7 +31,6 @@ export default function TopNavi({ children }) {
     const { logo, logo_day, auth, pages, current_locale } = usePage().props;
 
     //const [selectedLang, setSelectedLang] = useState(current_locale || "en");
-    console.log('current_locale', current_locale)
     const [isDarkMode, setIsDarkMode] = useState("no");
     const [showSearch, setShowSearch] = useState(false);
 
@@ -136,8 +135,6 @@ export default function TopNavi({ children }) {
     };
 
     const updateTerm = debounce((e) => {
-        console.log(`debounced term updated to: ${e.target.value}`);
-
         if (e.target.value.length > 2) {
             axios
                 .get(route("channel.search"), {
@@ -151,21 +148,24 @@ export default function TopNavi({ children }) {
     }, 500);
 
     return (
-        <div className="fixed inset-x-0 z-10 bg-violet-800 border-b-2 border-violet-800 dark:bg-zinc-900 dark:border-b-2 dark:border-zinc-800">
+        <nav className="fixed inset-x-0 z-10 bg-violet-800 border-b-2 border-violet-800 dark:bg-zinc-900 dark:border-b-2 dark:border-zinc-800" role="navigation" aria-label="Main navigation">
             <Modal show={showSearch}
-                closeable={true}
-                onClose={(e) => setShowSearch(false)}
+                   closeable={true}
+                   onClose={(e) => setShowSearch(false)}
             >
                 <div className="p-3">
+                    <label htmlFor="channel-search" className="sr-only">{__("Search Channels")}</label>
                     <TextInput
+                        id="channel-search"
                         className={"w-full mb-5"}
                         handleChange={(e) => updateTerm(e)}
                         type="text"
                         placeholder={__("Search Channels")}
                         isFocused={true}
+                        aria-label={__("Search Channels")}
                     />
                     {results.length === 0 && (
-                        <div className="dark:text-white">
+                        <div className="dark:text-white" role="status" aria-live="polite">
                             {__("No results")}
                         </div>
                     )}
@@ -184,7 +184,9 @@ export default function TopNavi({ children }) {
                                     >
                                         <img
                                             src={sr.profile_picture}
-                                            alt=""
+                                            alt={`${sr.name} profile picture`}
+                                            width="56"
+                                            height="56"
                                             className="rounded-full h-14 border-zinc-200 dark:border-indigo-200 border"
                                         />
                                     </Link>
@@ -216,8 +218,8 @@ export default function TopNavi({ children }) {
             <div className="max-w-7xl mx-auto">
                 <div className="hidden lg:flex items-center justify-between py-2">
                     <div className="flex-shrink-0">
-                        <Link href={route("home")}>
-                            <img src={logo} alt="logo" className="h-8" />
+                        <Link href={route("home")} aria-label="Home">
+                            <img src={logo} alt="Fetish Mega Store Logo" width="100%" height="32" className="h-8" style={{ imageRendering: 'crisp-edges', objectFit: 'contain' }} />
                         </Link>
                     </div>
 
@@ -254,6 +256,13 @@ export default function TopNavi({ children }) {
                             >
                                 <span>{__("Products")}</span>
                             </Link>
+                            <a
+                                href='https://adultdata.net/our-sites/'
+                                target="_blank"
+                                className="inline-flex items-center text-white text-md hover:text-indigo-200 font-semibold"
+                            >
+                                <span>{__("Our Sites")}</span>
+                            </a>
                             {/* <Link
                                 href={route("ebook.browse")}
                                 className="inline-flex items-center text-white text-md hover:text-indigo-200 font-semibold"
@@ -331,34 +340,40 @@ export default function TopNavi({ children }) {
                     {/* Right Section - User Controls */}
                     <div className="flex items-center space-x-4 flex-shrink-0">
                         <Select defaultValue={selectedLang}
-                            style={{ width: 120 }}
-                            className="hidden md:inline-flex items-center text-white font-semibold"
-                            onChange={handleChangeLang}
-                            options={[
-                                { value: 'en', label: 'English' },
-                                { value: 'de', label: 'German' },
-                                { value: 'it', label: 'Italian' },
-                                { value: 'fr', label: 'French' },
-                                { value: 'es', label: 'Spanish' },
-                                { value: 'ru', label: 'Russian' },
-                                { value: 'zh', label: 'Chinese' },
-                                { value: 'jp', label: 'Japanese' },
-                                { value: 'pt', label: 'Portuguese' },
-                                { value: 'pl', label: 'Polish' },
-                                { value: 'tr', label: 'Turkish' },
-                            ]}
+                                style={{ width: 120 }}
+                                className="hidden md:inline-flex items-center text-white font-semibold"
+                                onChange={handleChangeLang}
+                                options={[
+                                    { value: 'en', label: 'English' },
+                                    { value: 'de', label: 'German' },
+                                    { value: 'it', label: 'Italian' },
+                                    { value: 'fr', label: 'French' },
+                                    { value: 'es', label: 'Spanish' },
+                                    { value: 'ru', label: 'Russian' },
+                                    { value: 'zh', label: 'Chinese' },
+                                    { value: 'jp', label: 'Japanese' },
+                                    { value: 'pt', label: 'Portuguese' },
+                                    { value: 'pl', label: 'Polish' },
+                                    { value: 'tr', label: 'Turkish' },
+                                ]}
                         />
 
                         {isDarkMode == "no" ? (
-                            <MdDarkMode
+                            <button
+                                onClick={switchDarkMode}
+                                aria-label={__("Switch to dark mode")}
                                 className="w-6 h-6 text-white hover:text-indigo-200 cursor-pointer"
-                                onClick={switchDarkMode}
-                            />
+                            >
+                                <MdDarkMode className="w-6 h-6" />
+                            </button>
                         ) : (
-                            <BsFillSunFill
-                                className="w-6 h-6 text-white cursor-pointer hover:text-orange-400"
+                            <button
                                 onClick={switchDarkMode}
-                            />
+                                aria-label={__("Switch to light mode")}
+                                className="w-6 h-6 text-white cursor-pointer hover:text-orange-400"
+                            >
+                                <BsFillSunFill className="w-6 h-6" />
+                            </button>
                         )}
 
                         {!auth.user ? (
@@ -404,7 +419,7 @@ export default function TopNavi({ children }) {
                                         href={`${auth.user.is_streamer === "yes"
                                             ? route("payout.withdraw")
                                             : route("profile.myTokens")
-                                            }`}
+                                        }`}
                                     >
                                         <span
                                             className="flex items-center bg-green-100 text-green-700 text-xs font-bold justify-center py-1 rounded-lg">
@@ -422,7 +437,7 @@ export default function TopNavi({ children }) {
                                                 ":unreadNotificationsCount new",
                                                 {
                                                     unreadNotificationsCount:
-                                                        auth.unreadNotifications,
+                                                    auth.unreadNotifications,
                                                 }
                                             )}
                                         </span>
@@ -582,29 +597,29 @@ export default function TopNavi({ children }) {
                 {/* Mobile Layout - No Changes */}
                 <div className="lg:hidden flex justify-between items-center py-4 px-4">
                     <div className="flex items-center">
-                        <Link href={route("home")}>
-                            <img src={logo} alt="logo" className="h-8 mr-1 mt-1" />
+                        <Link href={route("home")} aria-label="Home">
+                            <img src={logo} alt="Fetish Mega Store Logo" width="100%" height="32" className="h-8 mr-1 mt-1" style={{ imageRendering: 'crisp-edges', objectFit: 'contain' }} />
                         </Link>
                     </div>
 
                     <div className="flex items-center space-x-4">
                         <Select value={selectedLang}
-                            style={{ width: 100 }}
-                            className="inline-flex items-center text-white text-md"
-                            onChange={handleChangeLang}
-                            options={[
-                                { value: "en", label: "English" },
-                                { value: "de", label: "German" },
-                                { value: "it", label: "Italian" },
-                                { value: "fr", label: "French" },
-                                { value: "es", label: "Spanish" },
-                                { value: "ru", label: "Russian" },
-                                { value: "zh", label: "Chinese" },
-                                { value: "jp", label: "Japanese" },
-                                { value: "pt", label: "Portuguese" },
-                                { value: "pl", label: "Polish" },
-                                { value: "tr", label: "Turkish" },
-                            ]}
+                                style={{ width: 100 }}
+                                className="inline-flex items-center text-white text-md"
+                                onChange={handleChangeLang}
+                                options={[
+                                    { value: "en", label: "English" },
+                                    { value: "de", label: "German" },
+                                    { value: "it", label: "Italian" },
+                                    { value: "fr", label: "French" },
+                                    { value: "es", label: "Spanish" },
+                                    { value: "ru", label: "Russian" },
+                                    { value: "zh", label: "Chinese" },
+                                    { value: "jp", label: "Japanese" },
+                                    { value: "pt", label: "Portuguese" },
+                                    { value: "pl", label: "Polish" },
+                                    { value: "tr", label: "Turkish" },
+                                ]}
                         />
 
                         {!auth.user ? (
@@ -634,7 +649,7 @@ export default function TopNavi({ children }) {
                                         href={`${auth.user.is_streamer === "yes"
                                             ? route("payout.withdraw")
                                             : route("profile.myTokens")
-                                            }`}
+                                        }`}
                                     >
                                         <span
                                             className="flex items-center bg-green-100 text-green-700 text-xs font-bold justify-center py-1 rounded-lg">
@@ -652,7 +667,7 @@ export default function TopNavi({ children }) {
                                                 ":unreadNotificationsCount new",
                                                 {
                                                     unreadNotificationsCount:
-                                                        auth.unreadNotifications,
+                                                    auth.unreadNotifications,
                                                 }
                                             )}
                                         </span>
@@ -778,6 +793,9 @@ export default function TopNavi({ children }) {
                                         <Dropdown.Link href={route("short.videos.browse")}>
                                             {__("Previews Videos")}
                                         </Dropdown.Link>
+                                        <a href="https://adultdata.net/our-sites/" target="_blank" className="block w-full px-4 py-2 text-left text-sm leading-5 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:outline-none focus:bg-gray-100 dark:focus:bg-gray-800 transition duration-150 ease-in-out">
+                                            {__("Our Sites")}
+                                        </a>
                                         <Dropdown.Link href={route("channels.browse")}>
                                             {__("Channels")}
                                         </Dropdown.Link>
@@ -848,6 +866,6 @@ export default function TopNavi({ children }) {
                     </div>
                 </div>
             </div>
-        </div>
+        </nav>
     );
 }

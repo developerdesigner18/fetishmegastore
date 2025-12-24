@@ -221,7 +221,7 @@ class ShortVideoController extends Controller
             // $blog->save();
             // $blog = new ShortVideo();
 
-            ShortVideo::create([
+            $shortVideo =ShortVideo::create([
                 'user_id' => $request->user_id,
                 'title' => json_encode($titleData),
                 'slug' => Str::slug($request->title) . '-' . uniqid(),
@@ -238,7 +238,7 @@ class ShortVideoController extends Controller
                 'video_id' => $request->video_id ?? null,
                 'views' => ShortVideo::RandomViews(),
             ]);
-
+            createGif($shortVideo->id);
             DB::commit();
 
         } catch (\Exception $exception) {

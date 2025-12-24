@@ -22,7 +22,7 @@ class ShortVideo extends Model
 
     protected $table = 'short_videos';
 
-    protected $appends = ['categoryNames', 'tagNames', 'modelNames', 'tagsDetails', 'categoryDetails', 'videoName', 'modelDetails', 'canBePlayed', 'title_en', 'title_de', 'description_en', 'description_de', 'selectedCategory', 'selectedModel', 'selectedTags', 'fullVideoLink', 'seoDeatils'];
+    protected $appends = ['categoryNames', 'tagNames', 'modelNames', 'tagsDetails', 'categoryDetails', 'videoName', 'modelDetails', 'canBePlayed', 'title_en', 'title_de', 'description_en', 'description_de', 'selectedCategory', 'selectedModel', 'selectedTags', 'fullVideoLink', 'seoDeatils', 'videoGIF'];
 
     protected $fillable = [
         'user_id',
@@ -44,6 +44,33 @@ class ShortVideo extends Model
     //     'title' => 'array',
     //     'description' => 'array',
     // ];
+
+
+    protected function getvideoGIFAttribute()
+{
+    if (empty($this->video)) {
+        return null;
+    }
+
+    // Get raw video path from database
+    $rawVideo = $this->getRawOriginal('video');
+    
+    // Remove Bunny CDN prefix if present to get just the filename
+    $bunnyPrefix = env('BUNNY_CDN');
+    if (str_starts_with($rawVideo, $bunnyPrefix)) {
+        $rawVideo = str_replace($bunnyPrefix, '', $rawVideo);
+    }
+    
+    // Extract filename
+    $filename = pathinfo($rawVideo, PATHINFO_FILENAME);
+    $gifName = $filename . '.gif';
+    
+    $bunnyBase = rtrim(env('BUNNY_CDN', 'https://storage.fetishmegastore.com/'), '/');
+    $bunnyGifUrl = $bunnyBase . '/videos/GIF/' . $gifName;
+    
+    return $bunnyGifUrl;
+}
+
 
     public function getPreviewVideosAttribute($value)
     {

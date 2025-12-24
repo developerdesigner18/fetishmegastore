@@ -4,13 +4,15 @@
 
 html {
     font-family: Nunito, ui-sans-serif, system-ui, -apple-system,
-        BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
-        "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-        "Segoe UI Symbol", "Noto Color Emoji";
+    BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
+    "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
 }
+
 .text-dark-purple {
     color: #474161;
 }
+
 .homepage-header-bg {
     position: relative;
     margin: 50px 0 0 0;
@@ -20,39 +22,48 @@ html {
     background-size: cover;
     height: 800px;
 }
+
 .no-bg-image {
     background-image: none;
     border: 3px solid red;
 }
+
 .homepage-text-container {
     padding: 20px 0 20px 0;
 }
+
 .bg-light-violet {
     background-color: #e7eaff;
 }
+
 .border-light-violet {
     border-color: #e0e3fc;
 }
+
 .heading-gradient {
     background: -webkit-linear-gradient(95deg, #4338ca 15%, #312e81 100%);
+    background-clip: text;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
 }
+
 .coverPic {
     position: relative;
     margin: 0 auto;
-    
+
     width: 100%;
     display: flex;
     justify-content: center;
-   
+
 }
-.coverPic img{
+
+.coverPic img {
     height: 100%;
     width: 100%;
     object-fit: fill;
 }
-.coverPic>div{
+
+.coverPic>div {
     position: absolute;
     bottom: 0;
     width: 100%;
@@ -61,69 +72,92 @@ html {
     background: #00000094;
     padding: 1rem;
 }
+
 .static-page p {
     padding: 10px 0 10px 0;
 }
+
 .static-page h1 {
     font-size: 150%;
 }
+
 .static-page h2 {
     font-size: 140%;
 }
+
 .static-page h3 {
     font-size: 130%;
 }
 
-.bg-indigo-800, .bg-violet-800, .bg-indigo-500{
+.bg-indigo-800,
+.bg-violet-800,
+.bg-indigo-500 {
     background-color: rgb(134, 0, 0) !important;
 }
-.bg-violet-600{
+
+.bg-violet-600 {
     background-color: rgb(255, 128, 128) !important;
 }
-.border-violet-800{
+
+.border-violet-800 {
     border-color: rgb(134, 0, 0) !important;
 }
-.text-indigo-700, .text-indigo-800, .text-indigo-600, .text-indigo-900 , .text-zinc-200{
+
+.text-indigo-700,
+.text-indigo-800,
+.text-indigo-600,
+.text-indigo-900,
+.text-zinc-200 {
     color: rgb(134, 0, 0) !important;
 }
-.text-xl:hover{
+
+.text-xl:hover {
     color: rgb(134, 0, 0) !important;
 }
-.text-white:hover{
+
+.text-white:hover {
     color: rgb(255, 128, 128) !important;
 }
-[type=checkbox], [type=radio]{
+
+[type=checkbox],
+[type=radio] {
     color: rgb(134, 0, 0) !important;
     border-color: rgb(134, 0, 0) !important;
 }
-.ant-pagination-item-active{
+
+.ant-pagination-item-active {
     border-color: rgb(255, 128, 128) !important;
 }
-.ant-pagination-item-active a{
+
+.ant-pagination-item-active a {
     color: rgb(134, 0, 0) !important;
 }
+
 .slick-next {
     right: -25px;
     width: 30px !important;
     height: 30px !important;
 }
+
 .slick-prev {
     left: -25px;
     z-index: 2;
     width: 30px !important;
     height: 30px !important;
 }
+
 .slick-prev:before,
 .slick-next:before {
     display: none;
 }
+
 .slick-prev:after,
 .slick-next:after {
     content: "";
     position: absolute;
     top: 50%;
     left: 50%;
-    transform: translate(-50%,-50%);
+    transform: translate(-50%, -50%);
     background-image: url("./next-arrow.svg");
     background-position: center;
     background-repeat: no-repeat;
@@ -131,8 +165,9 @@ html {
     width: 20px;
     height: 20px;
 }
-.slick-prev:after{
-    transform: translate(-50%,-50%) rotate(180deg);
+
+.slick-prev:after {
+    transform: translate(-50%, -50%) rotate(180deg);
 }
 
 .loader {
@@ -146,13 +181,23 @@ html {
 }
 
 @-webkit-keyframes spin {
-    0% { -webkit-transform: rotate(0deg); }
-    100% { -webkit-transform: rotate(360deg); }
+    0% {
+        -webkit-transform: rotate(0deg);
+    }
+
+    100% {
+        -webkit-transform: rotate(360deg);
+    }
 }
 
 @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
 
 .image-gallery-image {
@@ -174,3 +219,82 @@ img.thumbnail-image.rounded-tl-lg.rounded-tr-lg.mb-3 {
     max-width: 292px !important;
 }
 
+/* Accessibility Utilities */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+}
+
+.focus\:not-sr-only:focus {
+    position: static;
+    width: auto;
+    height: auto;
+    padding: inherit;
+    margin: inherit;
+    overflow: visible;
+    clip: auto;
+    white-space: normal;
+}
+
+/* Improved focus states for accessibility */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+    outline: 2px solid rgb(134, 0, 0);
+    outline-offset: 2px;
+}
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Performance: GPU acceleration for animations */
+.hovered-gif {
+    will-change: opacity;
+    transform: translateZ(0);
+}
+
+/* Optimize font rendering */
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Fix logo rendering - prevent blur */
+nav img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    transform: translateZ(0);
+    -webkit-transform: translateZ(0);
+}
+
+/* Ensure logo displays sharply */
+nav img[alt*="Logo"],
+nav img[alt*="logo"] {
+    object-fit: contain;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+    filter: none;
+    -webkit-filter: none;
+}

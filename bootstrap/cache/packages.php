@@ -45,16 +45,16 @@
       0 => 'Laravel\\Tinker\\TinkerServiceProvider',
     ),
   ),
-  'laravelcollective/html' => 
+  'laravellux/html' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Collective\\Html\\HtmlServiceProvider',
-    ),
     'aliases' => 
     array (
       'Form' => 'Collective\\Html\\FormFacade',
       'Html' => 'Collective\\Html\\HtmlFacade',
+    ),
+    'providers' => 
+    array (
+      0 => 'Collective\\Html\\HtmlServiceProvider',
     ),
   ),
   'mcamara/laravel-localization' => 
@@ -70,13 +70,13 @@
   ),
   'mews/purifier' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Mews\\Purifier\\PurifierServiceProvider',
-    ),
     'aliases' => 
     array (
       'Purifier' => 'Mews\\Purifier\\Facades\\Purifier',
+    ),
+    'providers' => 
+    array (
+      0 => 'Mews\\Purifier\\PurifierServiceProvider',
     ),
   ),
   'nesbot/carbon' => 
@@ -120,13 +120,13 @@
   ),
   'spatie/laravel-ignition' => 
   array (
-    'providers' => 
-    array (
-      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
-    ),
     'aliases' => 
     array (
       'Flare' => 'Spatie\\LaravelIgnition\\Facades\\Flare',
+    ),
+    'providers' => 
+    array (
+      0 => 'Spatie\\LaravelIgnition\\IgnitionServiceProvider',
     ),
   ),
   'tightenco/ziggy' => 

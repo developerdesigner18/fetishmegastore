@@ -94,7 +94,7 @@ export default function ChannelVideos({streamUser, userIsSubscribed, userLoginID
             </Modal>
 
             <VideosLoop videos={videos.data} userLoginID={userLoginID}/>
-
+            
             {videos.total > 9 && (
                 <div className="flex justify-center mt-4 space-x-2">
                     <SecondaryButton

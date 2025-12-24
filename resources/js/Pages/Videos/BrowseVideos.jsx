@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import Front from "@/Layouts/Front";
 import { Head, usePage } from "@inertiajs/inertia-react";
 import __ from "@/Functions/Translate";
@@ -15,21 +15,21 @@ import { IoMdFunnel } from "react-icons/io";
 import { Pagination } from "antd";
 
 export default function BrowseVideos({
-    userLoginID,
-    userrequest = {},
-    randomvideos = { data: [], total: 0 },
-    recommendedVideo = { data: [] , total: 0},
-    featuredChannels = [],
-    videos: initialVideos,
-    category,
-    categories,
-    exploreImage,
-    tags,
-    models,
-    blocks,
-    headTitle,
-    faqs,
-}) {
+                                         userLoginID,
+                                         userrequest = {},
+                                         randomvideos = { data: [], total: 0 },
+                                         recommendedVideo = { data: [], total: 0 },
+                                         featuredChannels = [],
+                                         videos: initialVideos,
+                                         category,
+                                         categories,
+                                         exploreImage,
+                                         tags,
+                                         models,
+                                         blocks,
+                                         headTitle,
+                                         faqs,
+                                     }) {
     // State for all data
     const [videos, setVideos] = useState(initialVideos || { data: [], total: 0, current_page: 1 });
     const [sort, setSort] = useState(userrequest.sort || "Recently");
@@ -47,9 +47,13 @@ export default function BrowseVideos({
     const { auth, watchVideos = [] } = usePage().props;
     const [showWatchedPopup, setShowWatchedPopup] = useState(false);
     const filters = useRef();
+    const searchDebounceTimer = useRef(null);
 
-    // Sahi 'hasFilter' logic
-    const hasFilter = search !== "" || selectedCategories.length > 0 || selectedTags.length > 0 || selectedModels.length > 0;
+    // Memoize expensive filter calculations
+    const hasFilter = useMemo(() =>
+            search !== "" || selectedCategories.length > 0 || selectedTags.length > 0 || selectedModels.length > 0,
+        [search, selectedCategories.length, selectedTags.length, selectedModels.length]
+    );
 
     useEffect(() => {
         const hasShownPopup = localStorage.getItem("watchedPopupShown");
@@ -59,97 +63,96 @@ export default function BrowseVideos({
         }
     }, [watchVideos]);
 
-    // Ek common function API call ke liye
-    const callFilterAPI = (pageNumber, filterOptions) => {
+    // Memoize API call function
+    const callFilterAPI = useCallback((pageNumber, filterOptions) => {
         setLoading(true);
         Inertia.get(route('videos.browse'), { ...filterOptions, page: pageNumber }, {
             preserveState: true,
             preserveScroll: true,
             replace: true,
             onSuccess: (page) => {
-                // Inertia baaki ke props (categories, tags etc.) automatically update kar dega
-                setVideos(page.props.videos); 
+                setVideos(page.props.videos);
             },
             onFinish: () => setLoading(false),
         });
-    };
+    }, []);
 
-    // Form submit par
-    const submit = (e) => {
+    // Form submit handler
+    const submit = useCallback((e) => {
         e.preventDefault();
         setPage(1);
         const filterOptions = { sort, search, selectedCategories, selectedTags, selectedModels };
         callFilterAPI(1, filterOptions);
         hideFilters();
-    };
+    }, [sort, search, selectedCategories, selectedTags, selectedModels, callFilterAPI]);
 
-    // Pagination par
-    const onChangePaginate = (pageNumber) => {
+    // Pagination handler
+    const onChangePaginate = useCallback((pageNumber) => {
         setPage(pageNumber);
         const filterOptions = { sort, search, selectedCategories, selectedTags, selectedModels };
         callFilterAPI(pageNumber, filterOptions);
-    };
+    }, [sort, search, selectedCategories, selectedTags, selectedModels, callFilterAPI]);
 
-    // Sort badalne par
-    const handleSortChange = (e) => {
+    // Sort change handler
+    const handleSortChange = useCallback((e) => {
         const newSort = e.target.value;
         setSort(newSort);
         setPage(1);
         const filterOptions = { sort: newSort, search, selectedCategories, selectedTags, selectedModels };
         callFilterAPI(1, filterOptions);
-    };
+    }, [search, selectedCategories, selectedTags, selectedModels, callFilterAPI]);
 
-    // Helper functions
-    const playModal = (e, video) => {
+    // Helper functions - memoized
+    const playModal = useCallback((e, video) => {
         e.preventDefault();
         setPlayVideo(video);
         setModal(true);
-    };
+    }, []);
 
-    const handleCategories = (event) => {
+    const handleCategories = useCallback((event) => {
         const { value, checked } = event.target;
         setSelectedCategories(current =>
             checked ? [...current, value] : current.filter(v => v !== value)
         );
-    };
+    }, []);
 
-    const handleTags = (event) => {
+    const handleTags = useCallback((event) => {
         const { value, checked } = event.target;
         setSelectedTags(current =>
             checked ? [...current, value] : current.filter(v => v !== value)
         );
-    };
+    }, []);
 
-    const handleModels = (event) => {
+    const handleModels = useCallback((event) => {
         const { value, checked } = event.target;
         setSelectedModels(current =>
             checked ? [...current, value] : current.filter(v => v !== value)
         );
-    };
+    }, []);
 
-    const showFilters = (e) => {
+    const showFilters = useCallback((e) => {
         e.preventDefault();
         filters.current.className = "fixed inset-0 z-[9999] pt-5 px-2 overflow-scroll h-screen bg-white dark:bg-black block w-2/3 flex-shrink-0 mr-5";
-    };
+    }, []);
 
-    const hideFilters = (e) => {
+    const hideFilters = useCallback((e) => {
         e?.preventDefault();
         filters.current.className = "hidden lg:block w-56 lg:flex-shrink-0 lg:mr-5";
-    };
+    }, []);
 
-    const resetFilters = (e) => {
+    const resetFilters = useCallback((e) => {
         e.preventDefault();
         Inertia.visit(route("videos.browse"));
-    };
- 
-    const handleClose = async () => {
+    }, []);
+
+    const handleClose = useCallback(async () => {
         try {
             await axios.post(route("cache.clear"));
         } catch (error) {
-            console.error("Cache clear error:", error);
+            // Silently handle error in production
         }
         setShowWatchedPopup(false);
-    };
+    }, []);
 
     return (
         <Front
@@ -166,7 +169,7 @@ export default function BrowseVideos({
                         categoryName: category.category,
                     })
                     : headTitle
-                    }`}
+                }`}
             />
             <Modal show={modal} onClose={(e) => setModal(false)}>
                 {playVideo && <SingleVideo video={playVideo} inModal={true} />}
@@ -176,7 +179,7 @@ export default function BrowseVideos({
                     <h2 className="text-xl font-bold text-indigo-700 dark:text-white mb-4">
                         {__("Watched Your Videos")}
                     </h2>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-4 gap-5">
                         {watchVideos.map((v) => (
                             <div
                                 className="border dark:border-zinc-800 shadow-sm rounded-lg pb-2 bg-white dark:bg-zinc-900 w-full"
@@ -237,7 +240,7 @@ export default function BrowseVideos({
                 </div>
             </Modal>
             <div className="flex w-full -mt-16">
-                <form onSubmit={submit}>
+                <form onSubmit={submit} role="search" aria-label="Video filters">
                     <div
                         ref={filters}
                         className="hidden lg:block w-56 lg:flex-shrink-0 lg:mr-5"
@@ -247,21 +250,24 @@ export default function BrowseVideos({
                             {__("Search")}
                         </h3>
                         <div className="bg-white dark:bg-zinc-800 rounded-b-lg shadow p-3">
+                            <label htmlFor="video-search" className="sr-only">{__("Search Video")}</label>
                             <TextInput
+                                id="video-search"
                                 className="w-full"
                                 name="search"
                                 value={search}
                                 handleChange={(e) => setSearch(e.target.value)}
                                 placeholder={__("Search Video")}
+                                aria-label={__("Search Video")}
                             />
                         </div>
 
                         {/* Sort By Radios */}
-                        <h3 className="mt-5 text-indigo-700 text-xl font-bold block p-3 bg-light-violet dark:bg-zinc-900 dark:text-white shadow rounded-t-lg">
+                        <h3 className="mt-5 text-indigo-700 text-xl font-bold block p-3 bg-light-violet dark:bg-zinc-900 dark:text-white shadow rounded-t-lg" id="sort-by-heading">
                             {__("Sort By")}
                         </h3>
-                        <div className="bg-white dark:bg-zinc-800 rounded-b-lg shadow p-3">
-                           {['Most', 'Recently', 'Older', 'Highest', 'Lowest', 'Only Free'].map(option => (
+                        <div className="bg-white dark:bg-zinc-800 rounded-b-lg shadow p-3" role="radiogroup" aria-labelledby="sort-by-heading">
+                            {['Most', 'Recently', 'Older', 'Highest', 'Lowest', 'Only Free'].map(option => (
                                 <label key={option} className="flex items-center text-gray-600 dark:text-white cursor-pointer">
                                     <input
                                         type={"radio"}
@@ -271,18 +277,18 @@ export default function BrowseVideos({
                                         className="mr-2"
                                         onChange={handleSortChange} // onChange event handler
                                     />
-                                    {__(option === 'Most' ? 'Most Viewed' : 
-                                         option === 'Recently' ? 'Newest Uploaded' :
-                                         option === 'Older' ? 'Older Videos' :
-                                         option === 'Highest' ? 'Highest Price' :
-                                         option === 'Lowest' ? 'Lowest Price' : 'Only Free')}
+                                    {__(option === 'Most' ? 'Most Viewed' :
+                                        option === 'Recently' ? 'Newest Uploaded' :
+                                            option === 'Older' ? 'Older Videos' :
+                                                option === 'Highest' ? 'Highest Price' :
+                                                    option === 'Lowest' ? 'Lowest Price' : 'Only Free')}
                                 </label>
-                           ))}
+                            ))}
                         </div>
-                       <h3 className="mt-5 text-indigo-700 text-xl font-bold block p-3 bg-light-violet dark:bg-zinc-900  dark:text-white shadow rounded-t-lg">
+                        <h3 className="mt-5 text-indigo-700 text-xl font-bold block p-3 bg-light-violet dark:bg-zinc-900  dark:text-white shadow rounded-t-lg" id="category-heading">
                             {__("Category")}
                         </h3>
-                        <div className="bg-white dark:bg-zinc-800 rounded-b-lg shadow p-3 overflow-y-auto h-48">
+                        <div className="bg-white dark:bg-zinc-800 rounded-b-lg shadow p-3 overflow-y-auto h-48" role="group" aria-labelledby="category-heading">
                             {categories.map((cat) => (
                                 <label key={`catFilter-${cat.id}`} className="flex items-center text-gray-600 dark:text-white cursor-pointer">
                                     <input
@@ -346,7 +352,7 @@ export default function BrowseVideos({
                         {isLoading ? (
                             <div className="my-3"><Spinner /></div>
                         ) : (
-                            <button type="submit" className="mt-5 bg-indigo-500 dark:bg-zinc-800 font-semibold text-white rounded-lg px-2 py-1.5 block w-full">
+                            <button type="submit" className="mt-5 bg-indigo-500 dark:bg-zinc-800 font-semibold text-white rounded-lg px-2 py-1.5 block w-full" aria-label={__("Apply Filters")}>
                                 {__("Apply Filters")}
                             </button>
                         )}
@@ -363,10 +369,12 @@ export default function BrowseVideos({
                         </div>
                     </div>
                 </form>
-                <div className="flex-grow">
+                <div className="flex-grow" role="region" aria-label="Video results">
                     <button
                         onClick={(e) => showFilters(e)}
                         className="mb-7 px-3 -mt-1 py-1.5 bg-indigo-500 text-white rounded-lg lg:hidden flex items-center justify-end"
+                        aria-label={__("Show Filters")}
+                        aria-expanded="false"
                     >
                         <IoMdFunnel className="mr-1" />
                         {__("Show Filters")}
@@ -382,14 +390,16 @@ export default function BrowseVideos({
                             <h2 className="text-indigo-700 text-2xl font-bold dark:text-white">
                                 {__("Random Videos")}
                             </h2>
-                            {/* <VideosLoop videos={randomvideos.data} blocks={blocks}/> */}
+
+                            {/* Only first 4 rows */}
                             <VideosLoop
-                                videos={randomvideos.data}
+                                videos={randomvideos.data.slice(0, 12)} // 👈 Only first 12 videos
                                 blocks={blocks}
-                                types={randomvideos.data.map((video) => video.type)}
                                 userLoginID={userLoginID}
                             />
-                            <h2 className="text-indigo-700 text-2xl font-bold dark:text-white">
+
+
+                            <h2 className="text-indigo-700 text-2xl font-bold dark:text-white mt-5">
                                 {__("Filtered Videos")}
                             </h2>
                         </div>

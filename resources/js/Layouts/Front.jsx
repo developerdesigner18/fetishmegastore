@@ -41,6 +41,8 @@ export default function Front({
                   src={extraHeaderImage}
                   alt=""
                   className={extraImageHeight}
+                  width="42px"
+                  height="56px"
                 />
               </div>
               <div className="ml-3">
