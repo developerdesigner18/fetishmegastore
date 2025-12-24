@@ -81,6 +81,8 @@ Route::get('admin/payout/mark-as-paid/{withdrawal}', [Admin::class, 'markPayment
 
 // Videos
 Route::get('admin/videos', [Admin::class, 'videos']);
+Route::get('admin/videos/create', [Admin::class, 'createVideo'])->name('admin.videos.create');
+Route::post('admin/videos/store', [Admin::class, 'storeVideo'])->name('admin.videos.store');
 Route::get('admin/videos/edit/{video}', [Admin::class, 'editVideo']);
 Route::post('admin/videos/save/{video}', [Admin::class, 'saveVideo']);
 

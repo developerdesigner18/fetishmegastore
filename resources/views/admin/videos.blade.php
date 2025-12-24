@@ -1,7 +1,12 @@
 @extends('admin.base')
 
 @section('section_title')
-<strong>{{ __('Videos Uploaded by Streamers') }}</strong>
+    <div class="flex justify-between items-center">
+        <strong>{{ __('Videos Uploaded by Streamers') }}</strong>
+        <a href="{{ route('admin.videos.create') }}" class="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded">
+            <i class="fa-solid fa-plus mr-2"></i>{{ __('Create New Video') }}
+        </a>
+    </div>
 @endsection
 
 @section('section_body')

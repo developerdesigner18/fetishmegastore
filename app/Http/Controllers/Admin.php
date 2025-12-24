@@ -557,6 +557,110 @@ class Admin extends Controller
         return redirect('admin/videos')->with('msg', __('Successfully updated video #' . $video->id));
     }
 
+    // create video
+    public function createVideo()
+    {
+        $active = 'videos';
+        $video_categories = VideoCategories::orderBy('category')->get();
+        $models = Models::orderBy('id', 'desc')->get();
+        $tags = Tag::orderBy('id', 'desc')->get();
+        $streamers = User::where('is_streamer', 'yes')->orderBy('username')->get();
+
+        $imageDirectory = public_path('videos');
+        $availableVideos = \Illuminate\Support\Facades\File::files($imageDirectory);
+        $fileNames = [];
+        foreach ($availableVideos as $videoDeatils) {
+            $array = [];
+            $array['label'] = $videoDeatils->getFilename();
+            $array['value'] = 'videos/' . $videoDeatils->getFilename();
+            $fileNames[] = $array;
+        }
+
+        $bunnyList = BunnyVideosList::selectRaw('label as value, name as label')->get()->toArray();
+        $fileNames = array_merge($fileNames, $bunnyList);
+
+        $supportedLocales = getSupportedLocales();
+
+        return view('admin.create-video', compact('active', 'video_categories', 'models', 'tags', 'fileNames', 'supportedLocales', 'streamers'));
+    }
+
+    // store video
+    public function storeVideo(Request $request)
+    {
+        // Validation rules with conditional requirements
+        $rules = [
+            'title' => 'required',
+            'price' => 'required|numeric|min:0',
+            'free_for_subs' => 'required|in:yes,no',
+            'category_id' => 'required|exists:video_categories,id',
+            'thumbnail' => 'required|image',
+            'user_id' => 'required|exists:users,id',
+            // Either video (FTP) OR video_file (upload) must be provided
+            'video' => 'required_without:video_file|nullable|string',
+            'video_file' => 'required_without:video|nullable|file|mimes:mp4,avi,mov,wmv,flv,mkv|max:512000'
+        ];
+
+        $request->validate($rules);
+
+
+        // Handle thumbnail upload
+        $thumbnail = Image::make($request->file('thumbnail'))->fit(640, 320)->stream();
+        $thumbFile = 'thumbnails/' . uniqid() . '-' . $request->user_id . '.' . $request->file('thumbnail')->getClientOriginalExtension();
+
+        Storage::disk(env('FILESYSTEM_DISK'))->put($thumbFile, $thumbnail);
+        Storage::disk(env('FILESYSTEM_DISK'))->setVisibility($thumbFile, 'public');
+
+        // Handle video file
+        $videoPath = '';
+        if ($request->filled('video')) {
+            // FTP video selected
+            $videoPath = $request->video;
+        } elseif ($request->hasFile('video_file')) {
+            // Direct file upload
+            $videoFile = $request->file('video_file');
+            $videoFileName = uniqid() . '-' . time() . '.' . $videoFile->getClientOriginalExtension();
+            $videoPath = 'videos/' . $videoFileName;
+
+            // Store video file
+            Storage::disk(env('FILESYSTEM_DISK'))->putFileAs('videos', $videoFile, $videoFileName);
+            Storage::disk(env('FILESYSTEM_DISK'))->setVisibility($videoPath, 'public');
+        }
+
+        // Prepare title data
+        $titleData = ['en' => $request->title];
+        if ($request->filled('title_lang') && $request->filled('title_de')) {
+            $titleData[$request->title_lang] = $request->title_de;
+        }
+
+        // Prepare description data
+        $descriptionData = ['en' => $request->description];
+        if ($request->filled('description_lang') && $request->filled('description_de')) {
+            $descriptionData[$request->description_lang] = $request->description_de;
+        }
+
+        // Create video
+        $video = Video::create([
+            'user_id' => $request->user_id,
+            'title' => json_encode($titleData),
+            'title_lang' => $request->title_lang ?? 'de',
+            'description' => json_encode($descriptionData),
+            'description_lang' => $request->description_lang ?? 'de',
+            'slug' => Str::slug($request->title) . '-' . uniqid(),
+            'price' => $request->price,
+            'free_for_subs' => $request->free_for_subs,
+            'category_id' => $request->category_id ? implode(',', $request->category_id) : '',
+            'model_id' => $request->model_id ? implode(',', $request->model_id) : '',
+            'tags' => $request->tags ? implode(',', $request->tags) : '',
+            'video' => $videoPath,
+            'thumbnail' => $thumbFile,
+            'disk' => env('FILESYSTEM_DISK', 'public'),
+            'seo' => $request->has('seo') ? json_encode($request->seo) : null,
+            'views' => 0,
+        ]);
+
+        return redirect('admin/videos')->with('msg', __('Successfully created video #' . $video->id));
+    }
+
     // subscriptions
     public function subscriptions(Request $r)
     {

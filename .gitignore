@@ -3,10 +3,7 @@
 /node_modules
 /storage/*.key
 /.phpunit.cache
-/.env
-.env
 .env.backup
-.env.production
 
 # IDE & system
 /.idea
@@ -67,3 +64,7 @@ yarn-error.log
 /vendor.zip
 /live_upload_bkp_04_09_2025.zip
 /output.mp4
+temp_auto_push.bat
+temp_interactive_push.bat
+config.bat
+branch_structure.json
